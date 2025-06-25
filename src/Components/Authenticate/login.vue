@@ -52,7 +52,7 @@ const router = useRouter();
 
 // login function
 const login = async () => {
-  error.value = ""; // reset error
+  error.value = "";
   try {
     await signInWithEmailAndPassword(auth, email.value, password.value);
     router.push("/dashboard");

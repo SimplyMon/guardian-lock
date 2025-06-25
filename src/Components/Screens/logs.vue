@@ -1,8 +1,8 @@
 <template>
-  <DashboardLayout>
+  <DashboardLayout @logout="logout">
     <div class="log-page">
       <header class="log-page__header">
-        <h1>Activity Logs</h1>
+        <h1>Activity <span>Logs</span></h1>
         <div class="controls">
           <input
             v-model="filterText"
@@ -11,11 +11,11 @@
             class="controls__search"
           />
           <select v-model="filterMethod" class="controls__select">
-            <option value="">All Methods</option>
-            <option value="PIN">PIN</option>
-            <option value="APP">APP</option>
-            <option value="FACE">FACE</option>
-            <option value="RFID">RFID</option>
+            <option value="">All Methods ▼</option>
+            <option value="PIN">PIN ▼</option>
+            <option value="APP">APP ▼</option>
+            <option value="FACE">FACE ▼</option>
+            <option value="RFID">RFID ▼</option>
           </select>
           <label for="date" style="align-items: center; display: flex"
             >Date filter</label
@@ -65,7 +65,10 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { signOut } from "firebase/auth";
 import { getDatabase, ref as dbRef, onValue } from "firebase/database";
+import { auth } from "../../Firebase/firebase";
 import DashboardLayout from "../Layout/DashboardLayout.vue";
 
 // state
@@ -74,10 +77,21 @@ const filterText = ref("");
 const filterMethod = ref("");
 const page = ref(1);
 const perPage = 8;
-
 const filterDate = ref("");
 
-// fetch & sort
+const router = useRouter();
+
+// logout handler
+const logout = async () => {
+  try {
+    await signOut(auth);
+    router.push({ name: "welcome" });
+  } catch (error) {
+    console.error("Logout failed:", error);
+  }
+};
+
+// fetch logs
 onMounted(() => {
   const db = getDatabase();
   onValue(dbRef(db, "logs"), (snap) => {
@@ -166,7 +180,10 @@ const groupedLogs = computed(() => {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
+  margin-bottom: 6rem;
+}
+.log-page__header span {
+  color: #00d8ff;
 }
 
 .log-page__header h1 {
@@ -183,6 +200,9 @@ const groupedLogs = computed(() => {
 
 .controls__search,
 .controls__select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   padding: 0.5rem 0.75rem;
   border: none;
   border-radius: 6px;
@@ -346,8 +366,11 @@ const groupedLogs = computed(() => {
   background: #777;
 }
 
-/* Mobile responsiveness */
+/* Mobile */
 @media (max-width: 768px) {
+  .log-page__header {
+    margin-bottom: 2rem;
+  }
   .log-page {
     padding: 1rem;
     margin-left: 0;

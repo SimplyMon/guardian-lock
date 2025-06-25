@@ -5,19 +5,29 @@
       <span class="label">Home</span>
     </router-link>
 
-    <router-link to="/logs" class="nav-item" aria-label="Logs">
+    <router-link
+      v-if="userStore.role === 'admin'"
+      to="/logs"
+      class="nav-item"
+      aria-label="Logs"
+    >
       <i class="fas fa-clipboard-list icon"></i>
       <span class="label">Logs</span>
+    </router-link>
+
+    <router-link
+      v-if="userStore.role === 'admin'"
+      to="/users"
+      class="nav-item"
+      aria-label="Users"
+    >
+      <i class="fas fa-users icon"></i>
+      <span class="label">Users</span>
     </router-link>
 
     <router-link to="/profile" class="nav-item" aria-label="Profile">
       <i class="fas fa-user icon"></i>
       <span class="label">Profile</span>
-    </router-link>
-
-    <router-link to="/users" class="nav-item" aria-label="Users">
-      <i class="fas fa-users icon"></i>
-      <span class="label">Users</span>
     </router-link>
 
     <button
@@ -31,7 +41,11 @@
   </nav>
 </template>
 
-<script setup></script>
+<script setup>
+import { useUserNameStore } from "@/Stores/useUsername";
+
+const userStore = useUserNameStore();
+</script>
 
 <style scoped>
 .bottom-nav {

@@ -4,7 +4,7 @@
       <div class="electric-bg"></div>
 
       <div class="dashboard-header">
-        <h1 class="main-header-title">My Dashboard</h1>
+        <h1 class="main-header-title">My <span>Dashboard</span></h1>
       </div>
       <div class="home-container">
         <h1 class="dashboard-title">Welcome Home, {{ userName }}</h1>
@@ -116,7 +116,6 @@ const toggleLock = async (shouldLog = true) => {
     if (shouldLog) await logAction();
 
     if (isCurrentlyLocked) {
-      // Just unlocked
       startCountdown(5);
       isDisabled.value = true;
       setTimeout(async () => {
@@ -185,6 +184,9 @@ onMounted(() => {
   color: #ffffff;
   margin-bottom: 0.5rem;
 }
+.main-header-title span {
+  color: #00d8ff;
+}
 
 .status-text {
   font-size: 1.25rem;
@@ -222,8 +224,8 @@ onMounted(() => {
 }
 
 .lock-button img {
-  width: 140px;
-  height: 140px;
+  width: 240px;
+  height: 240px;
   filter: brightness(1.3);
 }
 
@@ -371,12 +373,16 @@ onMounted(() => {
   }
 }
 
-/* Mobile Responsiveness */
+/* Mobile */
 @media (max-width: 768px) {
   .home-container {
     margin-left: 0;
     padding: 1.5rem;
     gap: 1.5rem;
+  }
+
+  .home-container {
+    margin-top: -20px;
   }
 
   .dashboard-title {
@@ -394,8 +400,8 @@ onMounted(() => {
   }
 
   .lock-button img {
-    width: 100px;
-    height: 100px;
+    width: 150px;
+    height: 150px;
   }
 
   .dashboard-header {

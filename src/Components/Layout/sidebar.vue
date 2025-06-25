@@ -6,7 +6,7 @@
         alt="Guardian Lock Logo"
         class="logo"
       />
-      <h1 class="app-name">Guardian Lock</h1>
+      <h1 class="app-name">Guardian <span>Lock</span></h1>
     </div>
 
     <nav>
@@ -17,27 +17,28 @@
             <span class="label">Home</span>
           </router-link>
         </li>
-        <li>
+        <li v-if="userStore.role === 'admin'">
           <router-link to="/logs" class="menu-item">
             <i class="fas fa-clipboard-list icon"></i>
             <span class="label">Logs</span>
           </router-link>
         </li>
+
+        <li v-if="userStore.role === 'admin'">
+          <router-link to="/users" class="menu-item">
+            <i class="fas fa-users icon"></i>
+            <span class="label">Users</span>
+          </router-link>
+        </li>
+
         <li>
           <router-link to="/profile" class="menu-item">
             <i class="fas fa-user icon"></i>
             <span class="label">Profile</span>
           </router-link>
         </li>
-        <li>
-          <router-link to="/users" class="menu-item">
-            <i class="fas fa-users icon"></i>
-            <span class="label">Users</span>
-          </router-link>
-        </li>
       </ul>
     </nav>
-
     <div
       class="profile-section"
       @click="toggleLogoutMenu"
@@ -84,7 +85,6 @@ function handleClickOutside(event) {
   }
 }
 
-// 🔄 Fetch user data if not yet set
 const fetchUserName = async () => {
   const user = auth.currentUser;
   if (!user) return;
@@ -137,7 +137,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: start;
-  margin-bottom: 4rem;
+  margin-bottom: 3.5rem;
 }
 
 .logo {
@@ -147,10 +147,13 @@ onBeforeUnmount(() => {
 }
 
 .app-name {
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   font-weight: 600;
   margin-left: 0.5rem;
   white-space: nowrap;
+}
+.app-name span {
+  color: #00d8ff;
 }
 
 .menu {
@@ -235,6 +238,7 @@ onBeforeUnmount(() => {
 }
 
 .logout-menu:hover {
-  background-color: #34495e;
+  background-color: #00d8ff;
+  color: #1e1e2f;
 }
 </style>

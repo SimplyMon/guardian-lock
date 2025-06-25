@@ -71,7 +71,7 @@ const router = useRouter();
 const register = async () => {
   error.value = "";
 
-  // Validate PIN: must be 6 digits
+  // Validate PIN
   if (!/^\d{6}$/.test(pin.value)) {
     error.value = "PIN must be exactly 6 digits.";
     return;
@@ -91,7 +91,8 @@ const register = async () => {
       phone_number: phoneNumber.value,
       email: email.value,
       registration_date: new Date().toISOString(),
-      role: "member",
+      role: "guest",
+      isBlocked: false,
       status: "pending",
       user_id: user.uid,
       pin: pin.value,
