@@ -26,7 +26,10 @@
             <option value="false">Unblocked</option>
           </select>
           <button class="clear-filters-button" @click="clearFilters">
-            Clear Filters
+            Clear
+          </button>
+          <button class="add-filters-button" @click="showAddUserModal = true">
+            Add User
           </button>
         </div>
       </header>
@@ -102,7 +105,14 @@
               style="cursor: pointer"
               @click="openBlockModal"
             >
-              {{ selectedUser.isBlocked ? "Blocked" : "Unblocked" }} ▼
+              {{ selectedUser.isBlocked ? "Blocked" : "Block" }} ▼
+            </span>
+          </div>
+
+          <div class="modal__row" v-if="selectedUser.expiry_date">
+            <span>Expiry:</span>
+            <span style="cursor: pointer" @click="editExpiry = true">
+              {{ formatDate(selectedUser.expiry_date) }} ▼
             </span>
           </div>
         </div>
@@ -110,6 +120,25 @@
     </div>
 
     <!-- TEST -->
+
+    <!-- EDIT EXPIRY MODAL -->
+    <div v-if="editExpiry" class="modal-overlay" @click.self="cancelExpiryEdit">
+      <div class="modal">
+        <button class="modal__close" @click="cancelExpiryEdit">×</button>
+        <h3 class="modal__title">Edit Expiry Date</h3>
+        <div class="modal__content">
+          <input
+            type="datetime-local"
+            v-model="editableExpiry"
+            class="modal__input"
+          />
+          <div class="modal__actions">
+            <button @click="updateExpiryDate">Save</button>
+            <button @click="cancelExpiryEdit">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- STATUS CHANGE MODAL -->
     <div
@@ -156,6 +185,64 @@
       </div>
     </div>
 
+    <!-- ADD USER MODAL -->
+    <div
+      v-if="showAddUserModal"
+      class="modal-overlay"
+      @click.self="showAddUserModal = false"
+    >
+      <div class="modal">
+        <button class="modal__close" @click="showAddUserModal = false">
+          ×
+        </button>
+        <h3 class="modal__title">Add New User</h3>
+
+        <form @submit.prevent="addUser">
+          <input v-model="newUser.name" placeholder="Full Name" required />
+          <input
+            v-model="newUser.phone_number"
+            placeholder="Phone Number"
+            required
+          />
+          <input
+            v-model="newUser.email"
+            placeholder="Email"
+            type="email"
+            required
+          />
+          <input
+            v-model="newUser.password"
+            placeholder="Password"
+            type="password"
+            required
+          />
+          <input
+            v-model="newUser.pin"
+            placeholder="6-digit PIN"
+            maxlength="6"
+            pattern="\d{6}"
+            inputmode="numeric"
+            required
+          />
+          <select v-model="newUser.role" required>
+            <option disabled value="">Select Role</option>
+            <option value="admin">Admin</option>
+            <option value="member">Member</option>
+            <option value="guest">Guest</option>
+          </select>
+          <input
+            v-if="newUser.role === 'guest'"
+            v-model="newUser.expiry_date"
+            type="datetime-local"
+            required
+          />
+
+          <button type="submit">Create User</button>
+          <p v-if="addUserError" class="error">{{ addUserError }}</p>
+        </form>
+      </div>
+    </div>
+
     <!-- ROLE CHANGE MODAL -->
     <div v-if="roleModal" class="modal-overlay" @click.self="closeRoleModal">
       <div class="modal">
@@ -182,9 +269,10 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { signOut } from "firebase/auth";
-import { database, auth } from "../../Firebase/firebase";
-import { ref as dbRef, onValue, update } from "firebase/database";
+import { database, tempAuth, auth } from "../../Firebase/firebase";
+import { ref as dbRef, onValue, update, set, get } from "firebase/database";
 import DashboardLayout from "../Layout/DashboardLayout.vue";
+import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 
 const users = ref({});
 const selectedUser = ref(null);
@@ -196,6 +284,92 @@ const roleModal = ref(false);
 const roleFilter = ref("");
 const statusFilter = ref("");
 const blockFilter = ref("");
+
+const editExpiry = ref(false);
+const editableExpiry = ref("");
+
+// add user
+const showAddUserModal = ref(false);
+const addUserError = ref("");
+const newUser = ref({
+  name: "",
+  phone_number: "",
+  email: "",
+  password: "",
+  pin: "",
+  role: "",
+  expiry_date: "",
+});
+
+const addUser = async () => {
+  addUserError.value = "";
+
+  //  validation
+  if (!/^\d{6}$/.test(newUser.value.pin)) {
+    addUserError.value = "PIN must be exactly 6 digits.";
+    return;
+  }
+
+  let tempUser = null;
+
+  try {
+    const userCredential = await createUserWithEmailAndPassword(
+      tempAuth,
+      newUser.value.email,
+      newUser.value.password
+    );
+    tempUser = userCredential.user;
+
+    const userData = {
+      name: newUser.value.name,
+      phone_number: newUser.value.phone_number,
+      email: newUser.value.email,
+      registration_date: new Date().toISOString(),
+      role: newUser.value.role,
+      isBlocked: false,
+      status: "pending",
+      user_id: tempUser.uid,
+      pin: newUser.value.pin,
+      expiry_date:
+        newUser.value.role === "guest" ? newUser.value.expiry_date : null,
+    };
+
+    const userRef = dbRef(database, `users/${tempUser.uid}`);
+    await set(userRef, userData);
+
+    // Reset form + close modal
+    showAddUserModal.value = false;
+    newUser.value = {
+      name: "",
+      phone_number: "",
+      email: "",
+      password: "",
+      pin: "",
+      role: "",
+      expiry_date: "",
+    };
+  } catch (err) {
+    switch (err.code) {
+      case "auth/email-already-in-use":
+        addUserError.value = "Email already in use.";
+        break;
+      case "auth/invalid-email":
+        addUserError.value = "Invalid email format.";
+        break;
+      case "auth/weak-password":
+        addUserError.value = "Password should be at least 6 characters.";
+        break;
+      default:
+        addUserError.value = "Failed to create user.";
+    }
+
+    if (tempUser) {
+      try {
+        await deleteUser(tempUser);
+      } catch (_) {}
+    }
+  }
+};
 
 const openRoleModal = () => {
   roleModal.value = true;
@@ -247,9 +421,35 @@ const changeStatus = async (newStatus) => {
 
 onMounted(() => {
   const usersRef = dbRef(database, "users/");
+
+  // Initial listener
   onValue(usersRef, (snapshot) => {
-    users.value = snapshot.val() || {};
+    const data = snapshot.val() || {};
+    users.value = data;
   });
+
+  // expiry check
+  setInterval(async () => {
+    const now = new Date();
+    const snapshot = await get(usersRef);
+    const data = snapshot.val() || {};
+
+    for (const [uid, user] of Object.entries(data)) {
+      if (
+        user.role === "guest" &&
+        user.expiry_date &&
+        new Date(user.expiry_date) <= now &&
+        (user.status !== "expired" || user.isBlocked !== true)
+      ) {
+        const userRef = dbRef(database, `users/${uid}`);
+        await update(userRef, {
+          status: "expired",
+          isBlocked: true,
+        });
+        console.log(`User ${user.name} expired.`);
+      }
+    }
+  }, 20000);
 });
 
 const formatDate = (timestamp) => {
@@ -260,6 +460,35 @@ const formatDate = (timestamp) => {
     month: "short",
     day: "numeric",
   });
+};
+
+// test
+const updateExpiryDate = async () => {
+  if (!selectedUser.value) return;
+
+  const userRef = dbRef(database, `users/${selectedUser.value.user_id}`);
+  await update(userRef, { expiry_date: editableExpiry.value });
+  selectedUser.value.expiry_date = editableExpiry.value;
+  editExpiry.value = false;
+
+  // Check expiry tt
+  const now = new Date();
+  if (
+    selectedUser.value.role === "guest" &&
+    new Date(editableExpiry.value) <= now
+  ) {
+    await update(userRef, {
+      status: "expired",
+      isBlocked: true,
+    });
+    selectedUser.value.status = "expired";
+    selectedUser.value.isBlocked = true;
+  }
+};
+
+const cancelExpiryEdit = () => {
+  editExpiry.value = false;
+  editableExpiry.value = selectedUser.value.expiry_date || "";
 };
 
 const filteredByRole = (role) => {
@@ -280,6 +509,8 @@ const clearFilters = () => {
 
 const openModal = (user) => {
   selectedUser.value = user;
+  editExpiry.value = false;
+  editableExpiry.value = user.expiry_date || "";
 };
 
 const closeModal = () => {
@@ -312,11 +543,9 @@ const logout = async () => {
   padding: 2rem;
   margin-left: 300px;
   color: #e0e0e0;
-  font-family: "Segoe UI", sans-serif;
   box-sizing: border-box;
 }
-
-.users-page__header h1 {
+editExpiry .users-page__header h1 {
   font-size: 1.75rem;
   font-weight: 600;
   color: #e0e0e0;
@@ -332,6 +561,21 @@ const logout = async () => {
   margin-bottom: 6rem;
 }
 .clear-filters-button {
+  background-color: #e74c3c;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.clear-filters-button:hover {
+  background-color: #d84838;
+}
+
+.add-filters-button {
   background-color: #00d8ff;
   color: #121212;
   border: none;
@@ -342,10 +586,9 @@ const logout = async () => {
   transition: background 0.2s ease;
 }
 
-.clear-filters-button:hover {
+.add-filters-button:hover {
   background-color: #16c1df;
 }
-
 .filters {
   display: flex;
   gap: 1rem;
@@ -467,6 +710,106 @@ const logout = async () => {
   font-size: 0.95rem;
   border-bottom: 1px solid #444;
   padding-bottom: 0.4rem;
+}
+
+/* Add User Modal Styles */
+.modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal form input,
+.modal form select {
+  background: #1c1c20;
+  border: 1px solid #444;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  color: #eee;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.modal form input:focus,
+.modal form select:focus {
+  outline: none;
+  border-color: #00d8ff;
+}
+
+.modal form button[type="submit"] {
+  background-color: #00d8ff;
+  color: #121212;
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.modal form button[type="submit"]:hover {
+  background-color: #16c1df;
+}
+
+.modal form .error {
+  color: #e74c3c;
+  font-size: 0.85rem;
+  margin-top: -0.5rem;
+}
+
+/* Edit Expiry Modal  */
+.modal__input {
+  background: #1c1c20;
+  border: 1px solid #444;
+  padding: 0.75rem 0.2rem;
+  border-radius: 6px;
+  color: #eee;
+  font-size: 0.95rem;
+  width: 100%;
+  margin-top: 1rem;
+  margin-bottom: 1.5rem;
+  transition: border-color 0.2s;
+}
+
+.modal__input:focus {
+  outline: none;
+  border-color: #00d8ff;
+}
+
+.modal__actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.modal__actions button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  font-weight: bold;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.modal__actions button:first-child {
+  background-color: #00d8ff;
+  color: #121212;
+}
+
+.modal__actions button:first-child:hover {
+  background-color: #16c1df;
+}
+
+.modal__actions button:last-child {
+  background-color: #e74c3c;
+  color: #fff;
+}
+
+.modal__actions button:last-child:hover {
+  background-color: #c0392b;
 }
 
 .status-option {
@@ -660,21 +1003,6 @@ const logout = async () => {
   .users-page__header h1 {
     margin-bottom: 0;
   }
-  .clear-filters-button {
-    background-color: #00d8ff;
-    color: #121212;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: background 0.2s ease;
-  }
-
-  .clear-filters-button:hover {
-    background-color: #16c1df;
-  }
-
   .filters {
     display: flex;
     flex-direction: column;

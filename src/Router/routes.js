@@ -10,6 +10,7 @@ import homeComponent from "@/Components/Screens/home.vue";
 import welcomeComponent from "../Components/Authenticate/welcome.vue";
 import logsComponent from "@/Components/Screens/logs.vue";
 import usersComponent from "@/Components/Screens/users.vue";
+import profileComponent from "@/Components/Screens/profile.vue";
 
 // fallback
 import accessDeniedComponents from "@/Components/Layout/Fallback/accessDenied.vue";
@@ -34,6 +35,11 @@ const routes = [
   {
     path: "/users",
     component: usersComponent,
+    meta: { requiresAuth: true, requiresAdmin: true },
+  },
+  {
+    path: "/profile",
+    component: profileComponent,
     meta: { requiresAuth: true, requiresAdmin: true },
   },
 
