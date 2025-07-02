@@ -40,6 +40,11 @@
         </button>
       </div>
     </div>
+    <AlarmModal
+      v-if="userRole === 'admin' && alarmActive"
+      :show="true"
+      :onStop="stopAlarm"
+    />
   </DashboardLayout>
 </template>
 
@@ -51,6 +56,7 @@ import { ref as dbRef, set, onValue } from "firebase/database";
 import { auth, database } from "../../Firebase/firebase";
 import DashboardLayout from "../Layout/DashboardLayout.vue";
 import { useUserNameStore } from "@/Stores/useUsername";
+import AlarmModal from "../Modal/AlarmModal.vue";
 
 import lockedImage from "@/Assets/images/locked.png";
 import unlockedImage from "@/Assets/images/unlocked.png";
@@ -59,11 +65,41 @@ const userStore = useUserNameStore();
 const userName = computed(() => userStore.name);
 // test
 const isDisabled = ref(false);
+const userRole = ref(null);
 
 const router = useRouter();
 const isLocked = ref(true);
 const countdown = ref(0);
 let countdownInterval = null;
+
+const alarmActive = ref(false);
+const alarmRef = dbRef(database, "alarm");
+
+const stopAlarm = async () => {
+  try {
+    await set(alarmRef, false);
+  } catch (error) {
+    console.error("Failed to stop alarm:", error);
+  }
+};
+
+onMounted(() => {
+  const uid = auth.currentUser?.uid;
+  if (uid) {
+    const roleRef = dbRef(database, `users/${uid}/role`);
+    onValue(roleRef, (snapshot) => {
+      userRole.value = snapshot.val();
+    });
+  }
+
+  onValue(lockStatusRef, (snapshot) => {
+    isLocked.value = snapshot.val() === "locked";
+  });
+
+  onValue(alarmRef, (snapshot) => {
+    alarmActive.value = snapshot.val() === true;
+  });
+});
 
 const startCountdown = (seconds) => {
   countdown.value = seconds;

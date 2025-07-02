@@ -40,7 +40,6 @@ const routes = [
   {
     path: "/profile",
     component: profileComponent,
-    meta: { requiresAuth: true, requiresAdmin: true },
   },
 
   { path: "/", redirect: { name: "welcome" } },
