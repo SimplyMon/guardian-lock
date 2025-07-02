@@ -63,6 +63,21 @@
               minlength="6"
             />
           </div>
+
+
+            <div class="form-group">
+          <label for="fingerprintId">Fingerprint ID</label>
+          <input
+            id="fingerprintId"
+            v-model="fingerprintId"
+            type="number"
+            min="1"
+            max="127"
+            placeholder="e.g., 23"
+          />
+          <button style="margin-top: 20px;" @click.prevent="assignFingerprintId" class="save-button">Assign Fingerprint</button>
+        </div>
+
         </section>
 
         <section class="form-section">
@@ -100,6 +115,7 @@ import modal from "../Modal/modal.vue";
 import { useRouter } from "vue-router";
 
 const newPassword = ref("");
+const fingerprintId = ref(""); // ✅ only defined once
 const router = useRouter();
 
 const profile = ref({
@@ -145,6 +161,13 @@ onMounted(async () => {
     if (snapshot.exists()) {
       profile.value = { ...profile.value, ...snapshot.val() };
     }
+
+    // 🔍 Load fingerprint ID assigned to this user (if any)
+    const fps = await get(dbRef(db, "fingerprintIDS"));
+    if (fps.exists()) {
+      const found = Object.entries(fps.val()).find(([id, uid]) => uid === user.uid);
+      if (found) fingerprintId.value = found[0];
+    }
   }
 });
 
@@ -158,30 +181,25 @@ const updateProfile = async () => {
     return;
   }
 
-  // ✅ Get old PIN BEFORE updating the user
   const userSnapshotBefore = await get(dbRef(db, `users/${user.uid}`));
   const oldPin = userSnapshotBefore.exists() ? userSnapshotBefore.val().pin : null;
 
-  // 🔐 Check if new PIN is already taken by someone else
   const existingPinSnapshot = await get(dbRef(db, `pins/${pin}`));
   if (existingPinSnapshot.exists() && existingPinSnapshot.val() !== user.uid) {
     openModal("PIN Conflict", "This PIN is already used by another user.");
     return;
   }
 
-  // ✅ Update user profile with new PIN
   await update(dbRef(db, `users/${user.uid}`), {
     name: profile.value.name,
     phone_number: profile.value.phone_number,
     pin: pin,
   });
 
-  // ✅ Update /pins/{pin} = uid
   await update(dbRef(db, `pins`), {
     [pin]: user.uid,
   });
 
-  // 🧹 Clean up old PIN if changed
   if (oldPin && oldPin !== pin) {
     const oldPinSnapshot = await get(dbRef(db, `pins/${oldPin}`));
     if (oldPinSnapshot.exists() && oldPinSnapshot.val() === user.uid) {
@@ -189,7 +207,6 @@ const updateProfile = async () => {
     }
   }
 
-  // 🔐 Password update (if needed)
   if (newPassword.value) {
     try {
       await updatePassword(user, newPassword.value);
@@ -208,13 +225,50 @@ const updateProfile = async () => {
   newPassword.value = "";
 };
 
-// validate pin input
+// ✅ Top-level function
+const assignFingerprintId = async () => {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const id = String(fingerprintId.value).trim();
+
+  if (!/^\d+$/.test(id) || +id < 1 || +id > 127) {
+    openModal("Invalid ID", "Fingerprint ID must be a number between 1 and 127.");
+    return;
+  }
+
+  // 🧼 Remove old fingerprint IDs for this user
+  const fps = await get(dbRef(db, "fingerprintIDS"));
+  if (fps.exists()) {
+    for (const [key, val] of Object.entries(fps.val())) {
+      if (val === user.uid && key !== id) {
+        await remove(dbRef(db, `fingerprintIDS/${key}`));
+      }
+    }
+  }
+
+  // 🔒 Check if the ID is already used by another user
+  const existing = await get(dbRef(db, `fingerprintIDS/${id}`));
+  if (existing.exists() && existing.val() !== user.uid) {
+    openModal("ID Taken", "This fingerprint ID is already assigned to another user.");
+    return;
+  }
+
+  // ✅ Assign fingerprint ID to current user
+  await update(dbRef(db, "fingerprintIDS"), {
+    [id]: user.uid,
+  });
+
+  openModal("Success", `Fingerprint ID ${id} has been assigned to you.`);
+  fingerprintId.value = id;
+};
+
+
 function handlePinInput(event) {
   let val = event.target.value.replace(/\D/g, "").slice(0, 6);
   profile.value.pin = val;
 }
 
-// logout
 const logout = async () => {
   try {
     await signOut(auth);
@@ -224,7 +278,6 @@ const logout = async () => {
   }
 };
 </script>
-
 
 
 <style scoped>
