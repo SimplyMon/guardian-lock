@@ -93,14 +93,13 @@
 
 <script setup>
 import { ref, onMounted, computed } from "vue";
-import { getDatabase, ref as dbRef, get, update } from "firebase/database";
+import { getDatabase, ref as dbRef, get, update, remove } from "firebase/database";
 import { getAuth, updatePassword, signOut } from "firebase/auth";
 import DashboardLayout from "../Layout/DashboardLayout.vue";
 import modal from "../Modal/modal.vue";
 import { useRouter } from "vue-router";
 
 const newPassword = ref("");
-
 const router = useRouter();
 
 const profile = ref({
@@ -159,13 +158,38 @@ const updateProfile = async () => {
     return;
   }
 
+  // ✅ Get old PIN BEFORE updating the user
+  const userSnapshotBefore = await get(dbRef(db, `users/${user.uid}`));
+  const oldPin = userSnapshotBefore.exists() ? userSnapshotBefore.val().pin : null;
+
+  // 🔐 Check if new PIN is already taken by someone else
+  const existingPinSnapshot = await get(dbRef(db, `pins/${pin}`));
+  if (existingPinSnapshot.exists() && existingPinSnapshot.val() !== user.uid) {
+    openModal("PIN Conflict", "This PIN is already used by another user.");
+    return;
+  }
+
+  // ✅ Update user profile with new PIN
   await update(dbRef(db, `users/${user.uid}`), {
     name: profile.value.name,
     phone_number: profile.value.phone_number,
-    pin: profile.value.pin,
+    pin: pin,
   });
 
-  // Update password
+  // ✅ Update /pins/{pin} = uid
+  await update(dbRef(db, `pins`), {
+    [pin]: user.uid,
+  });
+
+  // 🧹 Clean up old PIN if changed
+  if (oldPin && oldPin !== pin) {
+    const oldPinSnapshot = await get(dbRef(db, `pins/${oldPin}`));
+    if (oldPinSnapshot.exists() && oldPinSnapshot.val() === user.uid) {
+      await remove(dbRef(db, `pins/${oldPin}`));
+    }
+  }
+
+  // 🔐 Password update (if needed)
   if (newPassword.value) {
     try {
       await updatePassword(user, newPassword.value);
@@ -184,7 +208,7 @@ const updateProfile = async () => {
   newPassword.value = "";
 };
 
-// validate pin
+// validate pin input
 function handlePinInput(event) {
   let val = event.target.value.replace(/\D/g, "").slice(0, 6);
   profile.value.pin = val;
@@ -200,6 +224,8 @@ const logout = async () => {
   }
 };
 </script>
+
+
 
 <style scoped>
 .profile-container {
