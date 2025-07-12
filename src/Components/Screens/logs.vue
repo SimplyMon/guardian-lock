@@ -16,6 +16,7 @@
             <option value="APP">APP ▼</option>
             <option value="FACE">FACE ▼</option>
             <option value="RFID">RFID ▼</option>
+            <option value="FINGERPRINT">FINGERPRINT ▼</option>
           </select>
           <label for="date" style="align-items: center; display: flex"
             >Date filter</label
@@ -120,6 +121,8 @@ const getMethodIcon = (method) => {
       return "fa-face-smile";
     case "RFID":
       return "fa-id-card";
+    case "FINGERPRINT":
+      return "fa-fingerprint";
     default:
       return "fa-question";
   }
