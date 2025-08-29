@@ -606,11 +606,11 @@ editExpiry .users-page__header h1 {
 } */
 
 .filters select {
-  appearance: none; /* Remove default arrow */
+  appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
 
-  background: #2a2a2f;
+  background: #2e2e38;
   color: #e0e0e0;
   border: 1px solid #444;
   padding: 0.6rem 2.5rem 0.6rem 1rem;
@@ -634,7 +634,6 @@ editExpiry .users-page__header h1 {
   box-shadow: 0 0 0 3px rgba(0, 216, 255, 0.3);
 }
 
-/* Custom arrow */
 .filters {
   display: flex;
   gap: 1rem;

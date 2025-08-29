@@ -321,7 +321,7 @@ const groupedLogs = computed(() => {
   -webkit-appearance: none;
   -moz-appearance: none;
   width: 100%;
-  background: #2a2a2f;
+  background: #2e2e38;
   color: #e0e0e0;
   border: 1px solid #444;
   padding: 0.6rem 2.5rem 0.6rem 1rem;
