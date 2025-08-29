@@ -3,7 +3,6 @@ import { getAuth } from "firebase/auth";
 import { getDatabase } from "firebase/database";
 import { getAnalytics } from "firebase/analytics";
 
-// Firebase config main
 const firebaseConfig = {
   apiKey: "AIzaSyBoKLDspI4YeHJw0J6krS6tSN8WIvlT5sQ",
   authDomain: "guardian-lock-fc1aa.firebaseapp.com",
