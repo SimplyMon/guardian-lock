@@ -11,6 +11,15 @@
 
         <p class="description">
           Enter your credentials to access your Dashboard.
+          <br />
+          <br />
+          <span style="font-weight: bold; font-size: 16px"
+            >Test Account Cred.</span
+          >
+          <br />
+          <span>admin@gmail.com</span>
+          <br />
+          <span>admin123</span>
         </p>
 
         <form @submit.prevent="login" class="login-form">

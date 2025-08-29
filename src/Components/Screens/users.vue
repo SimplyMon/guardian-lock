@@ -561,7 +561,7 @@ editExpiry .users-page__header h1 {
   margin-bottom: 6rem;
 }
 .clear-filters-button {
-  background-color: #e74c3c;
+  background-color: transparent;
   color: #fff;
   border: none;
   padding: 0.5rem 1rem;
@@ -569,10 +569,12 @@ editExpiry .users-page__header h1 {
   font-size: 0.9rem;
   cursor: pointer;
   transition: background 0.2s ease;
+  border: 1px solid white;
 }
 
 .clear-filters-button:hover {
-  background-color: #d84838;
+  background-color: #16c1df;
+  color: #121212;
 }
 
 .add-filters-button {
@@ -594,13 +596,55 @@ editExpiry .users-page__header h1 {
   gap: 1rem;
 }
 
-.filters select {
+/* .filters select {
   background: #2a2a2f;
   color: #e0e0e0;
   border: 1px solid #444;
   padding: 0.5rem 1rem;
   border-radius: 6px;
   font-size: 0.9rem;
+} */
+
+.filters select {
+  appearance: none; /* Remove default arrow */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background: #2a2a2f;
+  color: #e0e0e0;
+  border: 1px solid #444;
+  padding: 0.6rem 2.5rem 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+/* Hover + focus */
+.filters select:hover {
+  border-color: #00d8ff;
+  background: #333;
+}
+
+.filters select:focus {
+  outline: none;
+  border-color: #00d8ff;
+  box-shadow: 0 0 0 3px rgba(0, 216, 255, 0.3);
+}
+
+/* Custom arrow */
+.filters {
+  display: flex;
+  gap: 1rem;
+}
+
+.filters select {
+  background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  background-size: 1.5rem;
 }
 
 /* Role Group Section */
@@ -804,12 +848,14 @@ editExpiry .users-page__header h1 {
 }
 
 .modal__actions button:last-child {
-  background-color: #e74c3c;
+  background-color: transparent;
+  border: 1px solid #ffffff;
   color: #fff;
 }
 
 .modal__actions button:last-child:hover {
-  background-color: #c0392b;
+  background-color: #16c1df;
+  color: #121212;
 }
 
 .status-option {
@@ -1010,13 +1056,17 @@ editExpiry .users-page__header h1 {
     gap: 1rem;
   }
 
-  .filters select {
+  /* .filters select {
     background: #2a2a2f;
     color: #e0e0e0;
     border: 1px solid #444;
     padding: 0.5rem 1rem;
     border-radius: 6px;
     font-size: 0.9rem;
+  } */
+
+  .filters select {
+    width: 100%;
   }
 }
 </style>

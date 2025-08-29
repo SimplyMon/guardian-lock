@@ -10,14 +10,18 @@
             placeholder="Search logs..."
             class="controls__search"
           />
-          <select v-model="filterMethod" class="controls__select">
-            <option value="">All Methods ▼</option>
-            <option value="PIN">PIN ▼</option>
-            <option value="APP">APP ▼</option>
-            <option value="FACE">FACE ▼</option>
-            <option value="RFID">RFID ▼</option>
-            <option value="FINGERPRINT">FINGERPRINT ▼</option>
-          </select>
+          <div class="custom-select">
+            <select v-model="filterMethod" class="controls__select">
+              <option value="">All Methods</option>
+              <option value="PIN">PIN</option>
+              <option value="APP">APP</option>
+              <option value="FACE">FACE</option>
+              <option value="RFID">RFID</option>
+              <option value="FINGERPRINT">FINGERPRINT</option>
+            </select>
+            <i class="fas fa-chevron-down custom-select__icon"></i>
+          </div>
+
           <label for="date" style="align-items: center; display: flex"
             >Date filter</label
           >
@@ -307,6 +311,60 @@ const groupedLogs = computed(() => {
 .badge--unlock {
   background: #2ecc71;
   color: #000;
+}
+/* Custom modern dropdown */
+.custom-select {
+  position: relative;
+  display: inline-block;
+  width: 180px;
+}
+
+.controls__select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 100%;
+  background: #2a2a2f;
+  color: #e0e0e0;
+  border: 1px solid #444;
+  padding: 0.6rem 2.5rem 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.controls__select:hover {
+  background: #333;
+  border-color: #00d8ff;
+}
+
+.controls__select:focus {
+  outline: none;
+  border-color: #00d8ff;
+  box-shadow: 0 0 0 3px rgba(0, 216, 255, 0.3);
+}
+
+.custom-select::after {
+  content: "";
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px; /* arrow size */
+  height: 24px;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='white' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M6 11l5 5 5-5z'/></svg>");
+  background-size: 24px 24px;
+  background-repeat: no-repeat;
+}
+.controls__select {
+  padding: 0.85rem 3rem 0.85rem 1rem;
+}
+
+.custom-select__icon {
+  display: none;
 }
 
 /* .pagination {

@@ -16,11 +16,11 @@
             <i class="fas fa-home icon"></i>
             <span class="label">Home</span>
           </router-link>
-        </li> 
+        </li>
         <li v-if="userStore.role === 'admin'">
           <router-link to="/logs" class="menu-item">
             <i class="fas fa-clipboard-list icon"></i>
-            <span class="label">Logs</span>221
+            <span class="label">Logs</span>
           </router-link>
         </li>
 

@@ -63,21 +63,6 @@
               minlength="6"
             />
           </div>
-
-
-            <div class="form-group">
-          <label for="fingerprintId">Fingerprint ID</label>
-          <input
-            id="fingerprintId"
-            v-model="fingerprintId"
-            type="number"
-            min="1"
-            max="127"
-            placeholder="e.g., 23"
-          />
-          <button style="margin-top: 20px;" @click.prevent="assignFingerprintId" class="save-button">Assign Fingerprint</button>
-        </div>
-
         </section>
 
         <section class="form-section">
@@ -108,7 +93,13 @@
 
 <script setup>
 import { ref, onMounted, computed } from "vue";
-import { getDatabase, ref as dbRef, get, update, remove } from "firebase/database";
+import {
+  getDatabase,
+  ref as dbRef,
+  get,
+  update,
+  remove,
+} from "firebase/database";
 import { getAuth, updatePassword, signOut } from "firebase/auth";
 import DashboardLayout from "../Layout/DashboardLayout.vue";
 import modal from "../Modal/modal.vue";
@@ -165,7 +156,9 @@ onMounted(async () => {
     // 🔍 Load fingerprint ID assigned to this user (if any)
     const fps = await get(dbRef(db, "fingerprintIDS"));
     if (fps.exists()) {
-      const found = Object.entries(fps.val()).find(([id, uid]) => uid === user.uid);
+      const found = Object.entries(fps.val()).find(
+        ([id, uid]) => uid === user.uid
+      );
       if (found) fingerprintId.value = found[0];
     }
   }
@@ -182,7 +175,9 @@ const updateProfile = async () => {
   }
 
   const userSnapshotBefore = await get(dbRef(db, `users/${user.uid}`));
-  const oldPin = userSnapshotBefore.exists() ? userSnapshotBefore.val().pin : null;
+  const oldPin = userSnapshotBefore.exists()
+    ? userSnapshotBefore.val().pin
+    : null;
 
   const existingPinSnapshot = await get(dbRef(db, `pins/${pin}`));
   if (existingPinSnapshot.exists() && existingPinSnapshot.val() !== user.uid) {
@@ -233,7 +228,10 @@ const assignFingerprintId = async () => {
   const id = String(fingerprintId.value).trim();
 
   if (!/^\d+$/.test(id) || +id < 1 || +id > 127) {
-    openModal("Invalid ID", "Fingerprint ID must be a number between 1 and 127.");
+    openModal(
+      "Invalid ID",
+      "Fingerprint ID must be a number between 1 and 127."
+    );
     return;
   }
 
@@ -250,7 +248,10 @@ const assignFingerprintId = async () => {
   // 🔒 Check if the ID is already used by another user
   const existing = await get(dbRef(db, `fingerprintIDS/${id}`));
   if (existing.exists() && existing.val() !== user.uid) {
-    openModal("ID Taken", "This fingerprint ID is already assigned to another user.");
+    openModal(
+      "ID Taken",
+      "This fingerprint ID is already assigned to another user."
+    );
     return;
   }
 
@@ -262,7 +263,6 @@ const assignFingerprintId = async () => {
   openModal("Success", `Fingerprint ID ${id} has been assigned to you.`);
   fingerprintId.value = id;
 };
-
 
 function handlePinInput(event) {
   let val = event.target.value.replace(/\D/g, "").slice(0, 6);
@@ -278,7 +278,6 @@ const logout = async () => {
   }
 };
 </script>
-
 
 <style scoped>
 .profile-container {
