@@ -1,3 +1,4 @@
+<!-- v2 -->
 <template>
   <nav class="bottom-nav">
     <router-link to="/dashboard" class="nav-item" aria-label="Home">
