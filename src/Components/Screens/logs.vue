@@ -4,31 +4,28 @@
       <header class="log-page__header">
         <h1>Activity <span>Logs</span></h1>
         <div class="controls">
-          <input
-            v-model="filterText"
-            type="search"
-            placeholder="Search logs..."
-            class="controls__search"
-          />
-          <div class="custom-select">
-            <select v-model="filterMethod" class="controls__select">
-              <option value="">All Methods</option>
-              <option value="PIN">PIN</option>
-              <option value="APP">APP</option>
-              <option value="FACE">FACE</option>
-              <option value="RFID">RFID</option>
-              <option value="FINGERPRINT">FINGERPRINT</option>
-            </select>
-            <i class="fas fa-chevron-down custom-select__icon"></i>
-          </div>
-
           <label for="date" style="align-items: center; display: flex"
-            >Date filter</label
+            >Date</label
           >
           <input
             id="date"
             v-model="filterDate"
             type="date"
+            class="controls__search"
+          />
+
+          <select v-model="filterMethod" class="controls__select">
+            <option value="">All Methods ▼</option>
+            <option value="PIN">PIN ▼</option>
+            <option value="APP">APP ▼</option>
+            <option value="FACE">FACE ▼</option>
+            <option value="RFID">RFID ▼</option>
+            <option value="FINGERPRINT">FINGERPRINT ▼</option>
+          </select>
+          <input
+            v-model="filterText"
+            type="search"
+            placeholder="Search logs..."
             class="controls__search"
           />
         </div>
